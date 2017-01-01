@@ -8,6 +8,7 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
+using Android.Util;
 
 using CocosSharp;
 
@@ -34,6 +35,51 @@ namespace BouncingGame
             // and attach the view created event to it
             CCGameView gameView = (CCGameView)FindViewById(Resource.Id.GameView);
             gameView.ViewCreated += LoadGame;
+        }
+
+        CCGameView _gameView = null;
+
+        CCScene _gameScene = null;
+        CCScene _menuScene = null;
+        GameLayer _gameLayer = null;
+
+
+        public void RunGame(EasingFactory factory)
+        {
+            if (_gameScene == null)
+            {
+                _gameScene = new CCScene(_gameView);
+                _gameLayer = new GameLayer(this);
+                _gameScene.AddLayer(_gameLayer);
+                _gameScene.AddLayer(new MenuLayer2(this));
+            }
+            _gameLayer.SetFactory(factory);
+            _gameLayer.StartGame();
+            _gameView.RunWithScene(_gameScene);
+        }
+
+        public void RunMenu()
+        {
+            if (_menuScene == null)
+            {
+                _menuScene = new CCScene(_gameView);
+                _menuScene.AddLayer(new MenuLayer(this));
+            }
+            _gameView.RunWithScene(_menuScene);
+        }
+
+        void PlayBackgroundMusic()
+        {
+            try
+            {
+                CCAudioEngine.SharedEngine.BackgroundMusicVolume = 0.08f;
+                CCAudioEngine.SharedEngine.EffectsVolume = 1f;
+                CCAudioEngine.SharedEngine.PlayBackgroundMusic(filename: "background_theme", loop: true);
+            }
+            catch (Exception ex)
+            {
+                Log.Info("adyga_pazzle", "[ERROR] can't play background music {0}", ex);
+            }
         }
 
         void LoadGame(object sender, EventArgs e)
@@ -67,10 +113,11 @@ namespace BouncingGame
                 }
 
                 gameView.ContentManager.SearchPaths = contentSearchPaths;
+                PlayBackgroundMusic();
 
-                CCScene gameScene = new CCScene(gameView);
-                gameScene.AddLayer(new GameLayer(this));
-                gameView.RunWithScene(gameScene);
+                // Construct game scene
+                _gameView = gameView;
+                RunMenu();
             }
         }
     }
